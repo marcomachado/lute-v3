@@ -129,6 +129,7 @@ def run(p: Playwright) -> None:  # pylint: disable=too-many-statements
     # Edit a term.
     _print("Edit term.")
     page.locator("#ID-0-0").click()
+    term_text = page.frame_locator('iframe[name="wordframe"]').locator("#text").input_value()
     page.frame_locator('iframe[name="wordframe"]').get_by_placeholder(
         "Translation"
     ).click()
@@ -151,7 +152,7 @@ def run(p: Playwright) -> None:  # pylint: disable=too-many-statements
     page.goto("http://localhost:5001/")
     page.locator("#menu_terms").hover()
     page.get_by_role("link", name="Terms", exact=True).click()
-    page.get_by_role("link", name="Hello").click()
+    page.get_by_role("link", name=term_text, exact=True).click()
     # TODO testing: restore Sentences smoke test check.
     # page.get_by_role("link", name="Sentences").click()
     page.get_by_role("link", name="Back to list").click()
