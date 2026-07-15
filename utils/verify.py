@@ -27,6 +27,8 @@ def verify(port):
     interval = 2
     elapsed = 0
 
+    url = f"http://localhost:{port}/info"
+
     while True:
         try:
             resp = requests.get(url, timeout=5)
