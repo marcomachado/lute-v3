@@ -389,19 +389,13 @@ jobs:
 
     - name: Run Lute application
       run: |
-        echo "python -u -m lute.main > lute_server.log 2>&1" > run-server.bat
+        echo "python -m lute.main" > run-server.bat
         cmd /c "START /b run-server.bat"
 
     - name: Wait for application to start
-      run: Start-Sleep -Seconds 15
+      run: Start-Sleep -Seconds 10
 
     - name: Verify flit install
       run: |
         cd ${{ github.workspace }}
         python -m utils.verify 5001
-
-    - name: Print Lute server log on failure
-      if: failure()
-      run: |
-        if (Test-Path lute_server.log) { Get-Content lute_server.log }
-      shell: pwsh
