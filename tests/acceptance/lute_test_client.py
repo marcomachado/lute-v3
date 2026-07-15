@@ -247,7 +247,10 @@ class LuteTestClient:  # pylint: disable=too-many-public-methods
                 labels = page.locator(f"xpath={x}")
                 count = labels.count()
                 assert count == 1, "have matching radio button"
-                labels.nth(0).click()
+                # force=True: status label can be outside the visible viewport
+                # due to the fixed-height word frame pane, but is still interactable.
+                # This matches the pattern used elsewhere in this test client.
+                labels.nth(0).click(force=True)
 
             elif k in ("translation", "text", "romanization"):
                 page.fill(f"#{k}", v)
