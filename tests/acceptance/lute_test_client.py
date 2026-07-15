@@ -247,7 +247,7 @@ class LuteTestClient:  # pylint: disable=too-many-public-methods
                 labels = page.locator(f"xpath={x}")
                 count = labels.count()
                 assert count == 1, "have matching radio button"
-                labels.nth(0).click()
+                labels.nth(0).click(force=True)
 
             elif k in ("translation", "text", "romanization"):
                 page.fill(f"#{k}", v)
