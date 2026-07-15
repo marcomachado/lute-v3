@@ -207,9 +207,9 @@ def test_fts_delegated_click_handler(app, app_context, spanish):
     assert b"$('#bookSearchTable').on('click', '.fts-goto-arrow'" in response.data
 
 
-def test_fts_magnifier_conditional_search_behavior(app, app_context, spanish):
+def test_fts_button_conditional_search_behavior(app, app_context, spanish):
     """
-    Verify that index.html implements conditional search restore on magnifier click
+    Verify that index.html implements conditional search restore on button click
     and cleans up sessionStorage when returning to reading mode.
     """
     b1 = make_book("Test Search Restore Book", ["Book text."], spanish)
@@ -222,7 +222,7 @@ def test_fts_magnifier_conditional_search_behavior(app, app_context, spanish):
     response = client.get(f"/read/{b1.id}")
     assert response.status_code == 200
 
-    # The template should check returnToReadingBanner visibility on magnifier click
+    # The template should check returnToReadingBanner visibility on button click
     assert b"$('#returnToReadingBanner').is(':visible')" in response.data
     # The returnToReadingPage function should clear lastBookSearchQuery from sessionStorage
     assert b"sessionStorage.removeItem(`lastBookSearchQuery-" in response.data

@@ -247,8 +247,7 @@ class LuteTestClient:  # pylint: disable=too-many-public-methods
                 labels = page.locator(f"xpath={x}")
                 count = labels.count()
                 assert count == 1, "have matching radio button"
-                labels.nth(0).scroll_into_view_if_needed()
-                labels.nth(0).dispatch_event("click")
+                labels.nth(0).click()
 
             elif k in ("translation", "text", "romanization"):
                 page.fill(f"#{k}", v)
@@ -598,11 +597,10 @@ class LuteTestClient:  # pylint: disable=too-many-public-methods
 
         should_refresh = False
         iframe = self.page.frame(name="wordframe")
-        self.page.locator('iframe[name="wordframe"]').scroll_into_view_if_needed()
         time.sleep(0.2)  # Hack, test failing.
         self._fill_term_form(iframe, updates)
         time.sleep(0.2)  # Hack, test failing.
-        iframe.locator("#btnsubmit").first.dispatch_event("click")
+        iframe.locator("#btnsubmit").first.click()
         time.sleep(0.2)  # Hack, test failing.
 
         # Only refresh the reading frame if everything was ok.

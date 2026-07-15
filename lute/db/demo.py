@@ -8,12 +8,58 @@ The db settings table contains a record, StKey = 'IsDemoData', if the
 data is demo.
 """
 
+import os
+import sqlite3
 from sqlalchemy import text
 from lute.language.service import Service as LanguageService
 from lute.book.model import Repository
 from lute.book.stats import Service as StatsService
 from lute.models.repositories import SystemSettingRepository, LanguageRepository
 import lute.db.management
+
+
+def _drop_fts_triggers(session):
+    """
+    Temporarily drop FTS triggers to speed up bulk inserts.
+    """
+    drop_statements = [
+        "DROP TRIGGER IF EXISTS trig_texts_after_insert_update_fts",
+        "DROP TRIGGER IF EXISTS trig_texts_after_delete_update_fts",
+        "DROP TRIGGER IF EXISTS trig_texts_after_update_text_update_fts",
+        "DROP TRIGGER IF EXISTS trig_books_after_update_title_update_fts",
+    ]
+    for statement in drop_statements:
+        session.execute(text(statement))
+    session.commit()
+
+
+def _recreate_fts_triggers(session):
+    """
+    Recreate FTS triggers from repeatable migrations file and rebuild index.
+    """
+    # Commit first to release any active write locks/transactions
+    session.commit()
+
+    thisdir = os.path.dirname(os.path.realpath(__file__))
+    trig_file = os.path.join(
+        thisdir, "schema", "migrations_repeatable", "trig_texts_fts.sql"
+    )
+    with open(trig_file, "r", encoding="utf-8") as f:
+        sql = f.read()
+
+    # Open a separate sqlite3 connection to execute trigger creation
+    db_file = session.connection().engine.url.database
+    conn = sqlite3.connect(db_file)
+    try:
+        conn.executescript(sql)
+        conn.commit()
+    finally:
+        conn.close()
+
+    # Rebuild and optimize FTS index in a single batch
+    session.execute(text("INSERT INTO texts_fts(texts_fts) VALUES('rebuild');"))
+    session.execute(text("INSERT INTO texts_fts(texts_fts) VALUES('optimize');"))
+    session.commit()
 
 
 class Service:
@@ -119,6 +165,8 @@ class Service:
 
     def load_demo_stories(self):
         "Load the stories for any languages already loaded."
+        _drop_fts_triggers(self.session)
+
         demo_langs = self._demo_languages()
         service = LanguageService(self.session)
         langdefs = [service.get_language_def(langname) for langname in demo_langs]
@@ -136,6 +184,8 @@ class Service:
             for b in d.books:
                 r.add(b)
         r.commit()
+
+        _recreate_fts_triggers(self.session)
 
         repo = SystemSettingRepository(self.session)
         repo.set_value("IsDemoData", True)
