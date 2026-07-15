@@ -361,12 +361,13 @@ def then_read_content(luteclient, content):
     timeout = 3  # seconds
     poll_frequency = 0.25
     start_time = time.time()
-    displayed = luteclient.displayed_text()
     while time.time() - start_time < timeout:
+        displayed = luteclient.displayed_text()
         if c == displayed:
             break
         time.sleep(poll_frequency)
     else:
+        displayed = luteclient.displayed_text()
         assert c == displayed
 
 
