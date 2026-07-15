@@ -29,6 +29,7 @@ from lute.models.repositories import (
     LanguageRepository,
 )
 from lute.book.model import Book, Repository
+from lute.models.book import Book as DBBook
 
 
 bp = Blueprint("book", __name__, url_prefix="/book")
@@ -233,3 +234,96 @@ def table_stats(bookid):
         "status_distribution": stats.status_distribution,
     }
     return jsonify(ret)
+
+
+@bp.route("/search_term", methods=["GET"])
+def search_term():
+    "Search books for a term."
+    term = request.args.get("term", "").strip()
+    if not term:
+        return jsonify([])
+    svc = BookService()
+    results = svc.search_books_for_term(term, db.session)
+    return jsonify(results)
+
+
+@bp.route("/search", methods=["GET"])
+def search():
+    "Render the content search page."
+    # pylint: disable=no-member
+    languages = db.session.query(Language).order_by(Language.name).all()
+    books = db.session.query(DBBook).order_by(DBBook.title).all()
+    return render_template("book/search.html", languages=languages, books=books)
+
+
+# pylint: disable=too-many-locals
+@bp.route("/search_datatables", methods=["GET"])
+def search_datatables():
+    "Search books for a term, returning paginated data for DataTables."
+    term = request.args.get("term", "").strip()
+    book_id = request.args.get("book_id", "").strip()
+    lang_id = request.args.get("lang_id", "").strip()
+    book_ids_param = request.args.getlist("book_ids[]") or request.args.getlist(
+        "book_ids"
+    )
+    show_archived = request.args.get("show_archived", "false") == "true"
+    draw = int(request.args.get("draw", 1))
+    start = int(request.args.get("start", 0))
+    length = int(request.args.get("length", 25))
+
+    if not term:
+        return jsonify(
+            {"draw": draw, "recordsTotal": 0, "recordsFiltered": 0, "data": []}
+        )
+
+    svc = BookService()
+    results = svc.search_books_for_term(term, db.session)
+
+    # Flatten the book-phrase nested dict into a list
+    flat_results = []
+    for book in results:
+        db_book = db.session.query(DBBook).get(book["book_id"])
+        if not db_book:
+            continue
+
+        # 1. Filter by archived status (if book_id is provided,
+        # e.g. in-book search modal, we bypass this)
+        if not book_id and not show_archived and db_book.archived:
+            continue
+
+        # 2. Filter by single book_id (passed from in-book search modal)
+        if book_id and str(book["book_id"]) != book_id:
+            continue
+
+        # 3. Filter by lang_id (selected language)
+        if lang_id and str(db_book.language_id) != lang_id:
+            continue
+
+        # 4. Filter by book_ids (list of selected books)
+        if book_ids_param and str(book["book_id"]) not in book_ids_param:
+            continue
+
+        for phrase in book["phrases"]:
+            flat_results.append(
+                {
+                    "book_id": book["book_id"],
+                    "title": book["title"],
+                    "page": phrase["page"],
+                    "text": phrase["text"],
+                }
+            )
+
+    # Sort flat results by title, page
+    flat_results.sort(key=lambda x: (x["title"], x["page"]))
+
+    total_records = len(flat_results)
+    paginated_data = flat_results[start : start + length]
+
+    return jsonify(
+        {
+            "draw": draw,
+            "recordsTotal": total_records,
+            "recordsFiltered": total_records,
+            "data": paginated_data,
+        }
+    )
