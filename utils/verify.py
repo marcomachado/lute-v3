@@ -10,23 +10,38 @@ python -m utils.verify [port]
 
 import sys
 import json
+import time
 import requests
 
 
 def verify(port):
     """
-    Check the /info page.
+    Check the /info page, retrying while the app starts.
     """
 
     url = f"http://localhost:{port}/info"
-    resp = requests.get(url, timeout=5)
-    c = resp.status_code
+    max_wait = 60
+    interval = 2
+    elapsed = 0
 
-    if c != 200:
-        raise RuntimeError(f"Code {c} for url {url}")
+    while True:
+        try:
+            resp = requests.get(url, timeout=5)
+            c = resp.status_code
 
-    print("Lute is running:")
-    print(json.dumps(resp.json(), indent=2))
+            if c != 200:
+                raise RuntimeError(f"Code {c} for url {url}")
+
+            print("Lute is running:")
+            print(json.dumps(resp.json(), indent=2))
+            return
+        except requests.exceptions.ConnectionError:
+            if elapsed >= max_wait:
+                raise RuntimeError(
+                    f"Server at {url} did not respond within {max_wait} seconds"
+                ) from None
+            time.sleep(interval)
+            elapsed += interval
 
 
 if __name__ == "__main__":
