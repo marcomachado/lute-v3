@@ -280,7 +280,6 @@
 
   let _lute_form_event_handler = function(event) {
     if (event.data.event === "LuteTermFormOpened") {
-      switchRightPaneTab('dict');
       LookupButton.TERM_FORM_CONTAINER = wordFrame.contentDocument.getElementById("term-form-container");
       loadDictionaries();
     }
@@ -291,7 +290,11 @@
 
       const viewportHeight = document.documentElement.clientHeight;
       const mousePosPercent = mouseY / viewportHeight * 100;
-      const dict_transform = `translateY(${Math.round(mousePosPercent) + 10}%)`;
+      const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize || 16);
+      const iframeHeight = 18 * rootFontSize;
+      const maxTranslatePercent = Math.max(0, ((viewportHeight - iframeHeight) / viewportHeight) * 100);
+      const targetTranslatePercent = Math.min(maxTranslatePercent, Math.round(mousePosPercent) + 10);
+      const dict_transform = `translateY(${targetTranslatePercent}%)`;
       document.querySelector("#read_pane_right.open-dict").style.transform = dict_transform;
       readPaneRight.style.opacity = "1";
 
