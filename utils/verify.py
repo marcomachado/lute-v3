@@ -23,6 +23,7 @@ def verify(port):
     for up to 60 seconds before giving up.
     """
 
+    url = f"http://localhost:{port}/info"
     max_wait = 60
     interval = 2
     elapsed = 0
