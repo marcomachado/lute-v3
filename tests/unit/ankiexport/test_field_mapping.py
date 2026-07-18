@@ -3,6 +3,7 @@ Field-to-value tests.
 """
 
 from unittest.mock import Mock
+import re
 import pytest
 
 from lute.ankiexport.exceptions import AnkiExportConfigurationError
@@ -205,14 +206,16 @@ def test_image_filenames_start_with_lowercase_lute_term(term):
     values, media = get_values_and_media_mapping(term, sentence_lookup, mapping)
 
     assert len(media) > 0, "should have mapped at least one image"
-    for filename in media.keys():
-        assert filename.startswith("lute_term_"), f"filename '{filename}' does not start with 'lute_term_'"
+    for filename in media:
+        assert filename.startswith(
+            "lute_term_"
+        ), f"filename '{filename}' does not start with 'lute_term_'"
         assert filename.lower() == filename, f"filename '{filename}' is not lowercase"
 
-    import re
     img_tags = re.findall(r'<img src="([^"]+)">', values["image"])
     assert len(img_tags) > 0, "should have found image tags"
     for src in img_tags:
-        assert src.startswith("lute_term_"), f"src '{src}' does not start with 'lute_term_'"
+        assert src.startswith(
+            "lute_term_"
+        ), f"src '{src}' does not start with 'lute_term_'"
         assert src.lower() == src, f"src '{src}' is not lowercase"
-
