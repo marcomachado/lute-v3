@@ -4,7 +4,7 @@ on:
   push:
     # A branch coverage can be created and used for ci
     # experiments and tweaks.
-    branches: [ "master", "coverage" ]
+    branches: [ "develop", "master", "github-ci", "windows" ]
 
 permissions:
   contents: read
