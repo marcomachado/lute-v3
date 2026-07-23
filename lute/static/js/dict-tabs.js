@@ -239,17 +239,12 @@ class DictButton extends LookupButton {
     if (LUTE_USER_SETTINGS.open_popup_in_new_tab)
       settings = null;
     
-    const topWin = window.top;
-    if (topWin.lute_popup_window && !topWin.lute_popup_window.closed) {
-      topWin.lute_popup_window.location = lookup_url;
-      topWin.lute_popup_window.focus();
+    if (typeof open_lute_popup_window === 'function') {
+      open_lute_popup_window(lookup_url, settings);
+    } else if (window.top && typeof window.top.open_lute_popup_window === 'function') {
+      window.top.open_lute_popup_window(lookup_url, settings);
     } else {
-      const pop = topWin.open(lookup_url, 'dictwin', settings);
-      topWin.lute_popup_window = pop;
-      if (!topWin.lute_popup_windows) {
-        topWin.lute_popup_windows = [];
-      }
-      topWin.lute_popup_windows.push(pop);
+      window.open(lookup_url, 'dictwin', settings);
     }
   }
 

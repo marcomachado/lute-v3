@@ -329,15 +329,10 @@
     }
 
     window.addEventListener("beforeunload", function() {
-      if (window.top.lute_popup_windows) {
-        window.top.lute_popup_windows.forEach(function(w) {
-          if (w && !w.closed) {
-            w.close();
-          }
-        });
-      }
-      if (window.top.lute_popup_window && !window.top.lute_popup_window.closed) {
-        window.top.lute_popup_window.close();
+      if (typeof close_lute_popup_windows === 'function') {
+        close_lute_popup_windows();
+      } else if (window.top && typeof window.top.close_lute_popup_windows === 'function') {
+        window.top.close_lute_popup_windows();
       }
     });
 

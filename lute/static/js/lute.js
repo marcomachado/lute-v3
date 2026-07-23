@@ -837,18 +837,7 @@ let show_translation_for_text = function(text) {
     if (LUTE_USER_SETTINGS.open_popup_in_new_tab)
       settings = null;
     
-    const topWin = window.top;
-    if (topWin.lute_popup_window && !topWin.lute_popup_window.closed) {
-      topWin.lute_popup_window.location = url;
-      topWin.lute_popup_window.focus();
-    } else {
-      const pop = topWin.open(url, 'dictwin', settings);
-      topWin.lute_popup_window = pop;
-      if (!topWin.lute_popup_windows) {
-        topWin.lute_popup_windows = [];
-      }
-      topWin.lute_popup_windows.push(pop);
-    }
+    open_lute_popup_window(url, settings);
   }
   else {
     top.frames.wordframe.location.href = url;
@@ -856,6 +845,24 @@ let show_translation_for_text = function(text) {
   }
 
 };
+
+
+function open_lute_popup_window(url, settings) {
+  const topWin = window.top;
+  if (topWin.lute_popup_window && !topWin.lute_popup_window.closed) {
+    topWin.lute_popup_window.location = url;
+    topWin.lute_popup_window.focus();
+  } else {
+    topWin.lute_popup_window = topWin.open(url, 'dictwin', settings);
+  }
+}
+
+function close_lute_popup_windows() {
+  const topWin = window.top;
+  if (topWin.lute_popup_window && !topWin.lute_popup_window.closed) {
+    topWin.lute_popup_window.close();
+  }
+}
 
 
 /**
